@@ -31,8 +31,17 @@ serverManager.onopen = (socket) => {
 }
 
 serverManager.ondata = async (socket, data) => {
-    const json = JSON.parse(data.toString());
     const clientId = socket.data.clientId;
+    const buffer = socket.data.buffer ? Buffer.concat([socket.data.buffer, data]) : data;
+
+    if (buffer.at(buffer.length - 1) !== 10) {
+        socket.data = {clientId, buffer};
+        return;
+    }
+
+    socket.data = {clientId, buffer: null};
+
+    const json = JSON.parse(buffer.toString());
 
     if (json.type === 'auth') {
         const serverId = await dataManager.checkAuthData(json.name);

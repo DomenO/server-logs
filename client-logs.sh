@@ -10,8 +10,8 @@
 SERVER="127.0.0.1"
 PORT=34092
 NAME="Test" # Streamlive-Kick-1
-CONTAINER_NAME="streamlive-kick"
-INTERVAL=5 # Update interval
+CONTAINER_NAME="streamlive-kick-5731"
+INTERVAL=10 # Update interval
 
 
 command_exists () {
@@ -46,7 +46,7 @@ while $RUNNING; do
 
 	while $RUNNING; do
 		if $AUTH; then
-			echo -n -e "{\"type\":\"auth\",\"name\":\"$NAME\"}"
+			echo -n -e "{\"type\":\"auth\",\"name\":\"$NAME\"}\n"
 			AUTH=false
 		fi
 		sleep $INTERVAL
@@ -83,8 +83,9 @@ while $RUNNING; do
 
         JSON_LOGS=`docker logs -t --since=${INTERVAL}s --details $CONTAINER_NAME | awk '{time=$1; $1=""; print "{\"time\": \""time"\", \"log\": \""substr($0,2)"\"},"}'`
 
-
-        echo -n -e "{\"type\": \"add\", \"data\": ["$(echo $JSON_LOGS | awk '{print substr($0, 1, length($0)-1)}')"]}"
+        if [ -n "$JSON_LOGS" ]; then
+            echo -n -e "{\"type\": \"add\", \"data\": ["$(echo $JSON_LOGS | awk '{print substr($0, 1, length($0)-1)}')"]}\n"
+        fi
 
 	done | $NETBIN $SERVER $PORT | while IFS= read -r -d $'\0' x; do
 		if [ ! -f /tmp/fuckbash ]; then
