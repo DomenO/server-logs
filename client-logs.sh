@@ -46,7 +46,7 @@ while $RUNNING; do
 
 	while $RUNNING; do
 		if $AUTH; then
-			echo -n -e "{\"type\":\"auth\",\"name\":\"$NAME\"}\n"
+			echo -e "{\"type\":\"auth\",\"name\":\"$NAME\"}"
 			AUTH=false
 		fi
 		sleep $INTERVAL
@@ -81,10 +81,10 @@ while $RUNNING; do
 		fi
 
 
-        JSON_LOGS=`docker logs -t --since=${INTERVAL}s --details $CONTAINER_NAME | awk '{time=$1; $1=""; print "{\"time\": \""time"\", \"log\": \""substr($0,2)"\"},"}'`
+        JSON_LOGS=`docker logs -t --since=${INTERVAL}s --details $CONTAINER_NAME |& awk '{time=$1; $1=""; print "{\"time\": \""time"\", \"log\": \""substr($0,2)"\"},"}'`
 
         if [ -n "$JSON_LOGS" ]; then
-            echo -n -e "{\"type\": \"add\", \"data\": ["$(echo $JSON_LOGS | awk '{print substr($0, 1, length($0)-1)}')"]}\n"
+            echo -e "{\"type\": \"add\", \"data\": ["$(echo $JSON_LOGS | awk '{print substr($0, 1, length($0)-1)}')"]}"
         fi
 
 	done | $NETBIN $SERVER $PORT | while IFS= read -r -d $'\0' x; do
