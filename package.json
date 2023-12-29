@@ -9,7 +9,7 @@
     "docker:build": "docker build --platform linux/amd64 -t server-logs:latest -f Dockerfile .",
     "docker:save": "docker save -o server-logs-latest.tar server-logs:latest",
     "docker:run": "docker run --restart always --name server-logs -d -p 34092:34092 -v $PWD/.env:/app/.env server-logs:latest",
-    "release:docker": "bun docker:build & bun docker:save"
+    "release:docker": "bun docker:build && bun docker:save"
   },
   "devDependencies": {
     "bun-types": "^1.0.4"
