@@ -12,28 +12,35 @@ import subprocess
 import time
 import json
 import select
-
+import os
+import signal
 
 def tail_logs(container_name, reconect_time = None):
     while True:
         while True:
 
             if reconect_time is not None:
-                result = subprocess.run(['docker', 'logs', '-t', '--since', reconect_time, container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                yield result.stderr.decode('utf-8') + result.stdout.decode('utf-8')
+                process = subprocess.run(['docker', 'logs', '-t', '--since', reconect_time, container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+                result = process.stderr.decode('utf-8') + process.stdout.decode('utf-8')
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
                 reconect_time = None
+                yield result
                 break
 
-            process = subprocess.Popen(['docker', 'logs', '--tail', '0', '-t', '-f', container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(['docker', 'logs', '--tail', '0', '-t', '-f', container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
             ready, _, _ = select.select([process.stdout, process.stderr], [], [], 300)
             if not ready:
                 print('Since')
-                result = subprocess.run(['docker', 'logs', '-t', '--since', '299s', container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                yield result.stderr.decode('utf-8') + result.stdout.decode('utf-8')
+                process = subprocess.run(['docker', 'logs', '-t', '--since', '299s', container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+                result = process.stderr.decode('utf-8') + process.stdout.decode('utf-8')
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                yield result
                 break
 
-            yield process.stderr.readline().decode('utf-8') + process.stdout.readline().decode('utf-8')
+            result = process.stderr.readline().decode('utf-8') + process.stdout.readline().decode('utf-8')
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            yield result
 
 def main(container_name, db_name, host, port, reconect_time):
 
