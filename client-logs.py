@@ -31,6 +31,7 @@ def tail_logs(container_name, reconect_time = None):
 
             ready, _, _ = select.select([process.stdout, process.stderr], [], [], 300)
             if not ready:
+                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
                 print('Since')
                 process = subprocess.run(['docker', 'logs', '-t', '--since', '299s', container_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
                 result = process.stderr.decode('utf-8') + process.stdout.decode('utf-8')
@@ -38,7 +39,14 @@ def tail_logs(container_name, reconect_time = None):
                 yield result
                 break
 
-            result = process.stderr.readline().decode('utf-8') + process.stdout.readline().decode('utf-8')
+            result = ""
+
+            if process.stdout in ready:
+                result += process.stdout.readline().decode('utf-8')
+
+            if process.stderr in ready:
+                result += process.stderr.readline().decode('utf-8')
+
             os.killpg(os.getpgid(process.pid), signal.SIGKILL)
             yield result
 
