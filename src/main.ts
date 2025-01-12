@@ -41,7 +41,17 @@ serverManager.ondata = async (socket, data) => {
 
     socket.data = {clientId, buffer: null};
 
-    const json = JSON.parse(buffer.toString());
+    const message = buffer.toString();
+    let json;
+
+    try {
+        json = JSON.parse(message);
+    } catch(e) {
+        console.error(message);
+        console.error(e);
+        socket.end();
+        return;
+    }
 
     if (json.type === 'auth') {
         const serverId = await dataManager.checkAuthData(json.name);
