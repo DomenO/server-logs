@@ -80,7 +80,7 @@ while $RUNNING; do
 			let TIMER-=1*INTERVAL
 		fi
 
-        JSON_LOGS=`docker logs -t --since=${INTERVAL}s --details $CONTAINER_NAME 2>&1 | awk '{time=$1; $1=""; gsub(/\\|\$|\"/, "\\\\&"); print "{\"time\": \""time"\", \"log\": \""substr($0,2)"\"},"}'`
+        JSON_LOGS=`docker logs -t --since=${INTERVAL}s --details $CONTAINER_NAME 2>&1 | awk '{time=$1; $1=""; gsub(/\\|[$"]/, "\\\\&"); print "{\"time\": \""time"\", \"log\": \""substr($0,2)"\"},"}'`
 
         if [ -n "$JSON_LOGS" ]; then
             echo -e "{\"type\": \"add\", \"data\": ["$(echo $JSON_LOGS | awk '{print substr($0, 1, length($0)-1)}')"]}"
