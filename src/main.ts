@@ -41,45 +41,48 @@ serverManager.ondata = async (socket, data) => {
 
     socket.data = {clientId, buffer: null};
 
-    const message = buffer.toString();
-    let json;
+    const messages = buffer.toString().split('\n').filter(Boolean);
 
-    try {
-        json = JSON.parse(message);
-    } catch(e) {
-        console.error(message);
-        console.error(e);
-        socket.end();
-        return;
-    }
+    for (const message of messages) {
+        let json;
 
-    if (json.type === 'auth') {
-        const serverId = await dataManager.checkAuthData(json.name);
-
-        if (!serverId) {
+        try {
+            json = JSON.parse(message);
+        } catch(e) {
+            console.error(message);
+            console.error(e);
             socket.end();
             return;
         }
 
-        console.log(json.name, 'connected');
+        if (json.type === 'auth') {
+            const serverId = await dataManager.checkAuthData(json.name);
 
-        clientServer.set(clientId, serverId);
+            if (!serverId) {
+                socket.end();
+                return;
+            }
 
-    } else if (json.type === 'add') {
+            console.log(json.name, 'connected');
 
-        const res = await dataManager.sendAddData({
-            container_id: clientServer.get(socket.data.clientId)!,
-            items: json.data.map((item: any) => ({
-                time: item.time.slice(0, -1),
-                log: item.log
-            }))
-        });
+            clientServer.set(clientId, serverId);
 
-        if (!res) {
+        } else if (json.type === 'add') {
+
+            const res = await dataManager.sendAddData({
+                container_id: clientServer.get(socket.data.clientId)!,
+                items: json.data.map((item: any) => ({
+                    time: item.time.slice(0, -1),
+                    log: item.log
+                }))
+            });
+
+            if (!res) {
+                socket.end();
+            }
+        } else {
             socket.end();
         }
-    } else {
-        socket.end();
     }
 }
 
