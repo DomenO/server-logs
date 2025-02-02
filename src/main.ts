@@ -1,4 +1,4 @@
-import {randomInt} from "node:crypto";
+import {randomUUID} from "node:crypto";
 import {DataManager} from "./data";
 import {ServerManager} from "./server";
 
@@ -17,13 +17,13 @@ const serverManager = new ServerManager({
     port: Number(Bun.env.PORT)
 });
 
-const clientServer = new Map<number, number>()
+const clientServer = new Map<string, number>()
 
 serverManager.onopen = (socket) => {
-    let id: number;
+    let id: string;
 
     do {
-        id = randomInt(1_000_000);
+        id = randomUUID();
 
     } while (clientServer.has(id))
 
